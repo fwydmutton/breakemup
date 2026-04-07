@@ -2,6 +2,8 @@
 
 A modern Breakout-style browser game built with HTML5 Canvas and JavaScript.
 
+[Click here to play the game!](https://fwydmutton.github.io/breakemup/)
+
 ## 🎮 Features
 - Level progression
 - Increasing difficulty
