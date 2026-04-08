@@ -43,23 +43,35 @@ canvas {
   display: none;
 }
 
-/* BUTTONS CENTERED BELOW */
+/* FORCE CENTER UNDER GAME */
 #controls {
-  width: 100%;
+  width: 800px;
+  max-width: 95vw;
   display: flex;
   justify-content: center;
-  gap: 25px;
-  margin-top: 15px;
+  align-items: center;
+  gap: 30px;
+  margin: 20px auto;
 }
 
+/* BIGGER BUTTONS FOR MOBILE */
 button {
-  width: 70px;
-  height: 70px;
-  font-size: 24px;
+  width: 90px;
+  height: 90px;
+  font-size: 30px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.25);
   color: white;
+}
+
+/* EVEN BIGGER ON SMALL SCREENS */
+@media (max-width: 600px) {
+  button {
+    width: 110px;
+    height: 110px;
+    font-size: 34px;
+  }
 }
 </style>
 </head>
