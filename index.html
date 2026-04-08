@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Breakout Mobile</title>
+<title>Breakout Touch</title>
 
 <style>
 body {
@@ -34,30 +34,6 @@ canvas {
   padding: 12px 20px;
   display: none;
 }
-
-/* CONTROLS */
-
-#controls {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-}
-
-#moveGroup {
-  display: flex;
-  gap: 15px;
-}
-
-button {
-  width: 80px;
-  height: 80px;
-  font-size: 28px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.2);
-  color: white;
-  touch-action: manipulation;
-}
 </style>
 </head>
 
@@ -66,13 +42,6 @@ button {
 <div id="ui"></div>
 <button id="restartBtn">Restart</button>
 <canvas id="game"></canvas>
-
-<div id="controls">
-  <div id="moveGroup">
-    <button id="leftBtn">◀</button>
-    <button id="rightBtn">▶</button>
-  </div>
-</div>
 
 <script>
 const canvas = document.getElementById("game");
@@ -88,11 +57,9 @@ window.addEventListener("resize", resize);
 const ui = document.getElementById("ui");
 const restartBtn = document.getElementById("restartBtn");
 
-let ball, paddle, bricks, score, lives, level, gameOver;
-let right = false, left = false;
+let ball, paddle, bricks, score, lives, gameOver;
 
 function init() {
-  level = 1;
   score = 0;
   lives = 3;
   gameOver = false;
@@ -103,7 +70,7 @@ function init() {
 
 function setupLevel(){
   ball = { x:canvas.width/2, y:canvas.height/2, dx:3, dy:-3, r:10 };
-  paddle = { w:140, h:12, x:canvas.width/2 - 70 };
+  paddle = { w:160, h:12, x:canvas.width/2 - 80 };
 
   bricks = [];
   for (let c=0;c<8;c++){
@@ -210,60 +177,52 @@ function loseLife(){
   updateUI();
 }
 
-/* SMOOTH MOVEMENT */
-let velocity = 0;
+/* TOUCH DRAG CONTROL */
 
-function movePaddle(){
-  if (right) velocity += 0.7;
-  if (left) velocity -= 0.7;
+let dragging = false;
 
-  velocity *= 0.85;
+canvas.addEventListener("touchstart", e => {
+  const rect = canvas.getBoundingClientRect();
+  const touchX = e.touches[0].clientX - rect.left;
 
-  paddle.x += velocity;
+  if (touchX > paddle.x && touchX < paddle.x + paddle.w) {
+    dragging = true;
+  }
+});
+
+canvas.addEventListener("touchmove", e => {
+  if (!dragging) return;
+
+  const rect = canvas.getBoundingClientRect();
+  let touchX = e.touches[0].clientX - rect.left;
+
+  paddle.x = touchX - paddle.w / 2;
 
   if (paddle.x < 0) paddle.x = 0;
-  if (paddle.x > canvas.width - paddle.w) paddle.x = canvas.width - paddle.w;
-
-  requestAnimationFrame(movePaddle);
-}
-
-/* TOUCH CONTROLS FIXED */
-
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
-
-leftBtn.addEventListener("touchstart", e => {
-  e.preventDefault();
-  left = true;
+  if (paddle.x > canvas.width - paddle.w) {
+    paddle.x = canvas.width - paddle.w;
+  }
 });
 
-leftBtn.addEventListener("touchend", () => left = false);
-leftBtn.addEventListener("touchcancel", () => left = false);
+canvas.addEventListener("touchend", () => dragging = false);
+canvas.addEventListener("touchcancel", () => dragging = false);
 
-rightBtn.addEventListener("touchstart", e => {
-  e.preventDefault();
-  right = true;
-});
+/* ALSO WORKS WITH MOUSE */
 
-rightBtn.addEventListener("touchend", () => right = false);
-rightBtn.addEventListener("touchcancel", () => right = false);
+canvas.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  let x = e.clientX - rect.left;
+  paddle.x = x - paddle.w / 2;
 
-/* KEYBOARD */
-
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowRight") right=true;
-  if(e.key==="ArrowLeft") left=true;
-});
-
-document.addEventListener("keyup",e=>{
-  if(e.key==="ArrowRight") right=false;
-  if(e.key==="ArrowLeft") left=false;
+  if (paddle.x < 0) paddle.x = 0;
+  if (paddle.x > canvas.width - paddle.w) {
+    paddle.x = canvas.width - paddle.w;
+  }
 });
 
 restartBtn.onclick = init;
 
 init();
-movePaddle();
 </script>
 
 </body>
