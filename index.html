@@ -68,6 +68,18 @@ let left=false, right=false;
 let startTime = Date.now();
 let started = false;
 
+  function init() {
+  level = 1;
+  score = 0;
+  lives = 3;
+  gameOver = false;
+  win = false;
+  setupLevel();
+  restartBtn.style.display = "none";
+  draw();
+}
+
+
 /* INIT */
 
 function init(){
