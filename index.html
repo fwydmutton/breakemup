@@ -27,6 +27,22 @@
 <canvas id="game" width="800" height="500"></canvas>
 
 <script>
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+
+// touch
+leftBtn.addEventListener("touchstart", () => left = true);
+leftBtn.addEventListener("touchend", () => left = false);
+
+rightBtn.addEventListener("touchstart", () => right = true);
+rightBtn.addEventListener("touchend", () => right = false);
+
+// mouse support for testing
+leftBtn.addEventListener("mousedown", () => left = true);
+leftBtn.addEventListener("mouseup", () => left = false);
+
+rightBtn.addEventListener("mousedown", () => right = true);
+rightBtn.addEventListener("mouseup", () => right = false);
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const ui = document.getElementById("ui");
