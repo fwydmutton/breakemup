@@ -3,61 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Breakout Touch</title>
+<title>Breakout Mobile</title>
 
 <style>
 body {
   margin: 0;
   background: #111;
-  overflow: hidden;
   font-family: Arial;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* GAME AREA */
+#gameWrapper {
+  width: 360px;
+  height: 600px;
+  position: relative;
+  margin-top: 10px;
 }
 
 canvas {
-  display: block;
+  width: 100%;
+  height: 100%;
   background: #222;
+  display: block;
+  border-radius: 10px;
 }
 
+/* UI */
 #ui {
   position: absolute;
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
   color: white;
+  font-size: 14px;
 }
 
 #restartBtn {
   position: absolute;
-  top: 55%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  padding: 12px 20px;
+  padding: 10px 16px;
   display: none;
+}
+
+/* BUTTONS BELOW GAME */
+#controls {
+  margin-top: 15px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+button {
+  width: 75px;
+  height: 75px;
+  font-size: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.2);
+  color: white;
 }
 </style>
 </head>
 
 <body>
 
-<div id="ui"></div>
-<button id="restartBtn">Restart</button>
-<canvas id="game"></canvas>
+<div id="gameWrapper">
+  <div id="ui"></div>
+  <button id="restartBtn">Restart</button>
+  <canvas id="game"></canvas>
+</div>
+
+<div id="controls">
+  <button id="leftBtn">◀</button>
+  <button id="rightBtn">▶</button>
+</div>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = canvas.clientWidth;
+  canvas.height = canvas.clientHeight;
 }
 resize();
-window.addEventListener("resize", resize);
 
 const ui = document.getElementById("ui");
 const restartBtn = document.getElementById("restartBtn");
 
 let ball, paddle, bricks, score, lives, gameOver;
+let right = false, left = false;
 
 function init() {
   score = 0;
@@ -70,7 +110,7 @@ function init() {
 
 function setupLevel(){
   ball = { x:canvas.width/2, y:canvas.height/2, dx:3, dy:-3, r:10 };
-  paddle = { w:160, h:12, x:canvas.width/2 - 80 };
+  paddle = { w:140, h:12, x:canvas.width/2 - 70 };
 
   bricks = [];
   for (let c=0;c<8;c++){
@@ -177,52 +217,41 @@ function loseLife(){
   updateUI();
 }
 
-/* TOUCH DRAG CONTROL */
+/* BUTTON CONTROLS */
 
-let dragging = false;
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
 
-canvas.addEventListener("touchstart", e => {
-  const rect = canvas.getBoundingClientRect();
-  const touchX = e.touches[0].clientX - rect.left;
-
-  if (touchX > paddle.x && touchX < paddle.x + paddle.w) {
-    dragging = true;
-  }
+leftBtn.addEventListener("touchstart", e => {
+  e.preventDefault();
+  left = true;
 });
+leftBtn.addEventListener("touchend", () => left = false);
+leftBtn.addEventListener("touchcancel", () => left = false);
 
-canvas.addEventListener("touchmove", e => {
-  if (!dragging) return;
+rightBtn.addEventListener("touchstart", e => {
+  e.preventDefault();
+  right = true;
+});
+rightBtn.addEventListener("touchend", () => right = false);
+rightBtn.addEventListener("touchcancel", () => right = false);
 
-  const rect = canvas.getBoundingClientRect();
-  let touchX = e.touches[0].clientX - rect.left;
+/* MOVEMENT */
 
-  paddle.x = touchX - paddle.w / 2;
+function movePaddle(){
+  if (right) paddle.x += 6;
+  if (left) paddle.x -= 6;
 
   if (paddle.x < 0) paddle.x = 0;
-  if (paddle.x > canvas.width - paddle.w) {
-    paddle.x = canvas.width - paddle.w;
-  }
-});
+  if (paddle.x > canvas.width - paddle.w) paddle.x = canvas.width - paddle.w;
 
-canvas.addEventListener("touchend", () => dragging = false);
-canvas.addEventListener("touchcancel", () => dragging = false);
-
-/* ALSO WORKS WITH MOUSE */
-
-canvas.addEventListener("mousemove", e => {
-  const rect = canvas.getBoundingClientRect();
-  let x = e.clientX - rect.left;
-  paddle.x = x - paddle.w / 2;
-
-  if (paddle.x < 0) paddle.x = 0;
-  if (paddle.x > canvas.width - paddle.w) {
-    paddle.x = canvas.width - paddle.w;
-  }
-});
+  requestAnimationFrame(movePaddle);
+}
 
 restartBtn.onclick = init;
 
 init();
+movePaddle();
 </script>
 
 </body>
