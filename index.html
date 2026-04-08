@@ -9,7 +9,6 @@
 body {
   margin: 0;
   background: #111;
-  font-family: Arial;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -66,7 +65,7 @@ const ctx = canvas.getContext("2d");
 let ball, paddle, bricks;
 let left=false, right=false;
 
-let startTime;
+let startTime = Date.now();
 let started = false;
 
 /* INIT */
@@ -96,34 +95,36 @@ function init(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  let elapsed = Date.now() - startTime;
-  let seconds = 3 - Math.floor(elapsed / 1000);
-
-  /* COUNTDOWN */
-  if (!started){
-    if (seconds > 0){
-      ctx.fillStyle = "white";
-      ctx.font = "60px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(seconds, canvas.width/2, canvas.height/2);
-    } else {
-      started = true;
-    }
-  }
-
   drawBricks();
   drawPaddle();
   drawBall();
+
+  let elapsed = Date.now() - startTime;
+  let seconds = 3 - Math.floor(elapsed / 1000);
+
+  if (!started){
+    if (seconds <= 0){
+      started = true;
+    }
+  }
 
   if (started){
     updateBall();
     collision();
   }
 
+  /* DRAW TIMER ON TOP */
+  if (!started){
+    ctx.fillStyle = "white";
+    ctx.font = "60px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(seconds, canvas.width/2, canvas.height/2);
+  }
+
   requestAnimationFrame(draw);
 }
 
-/* DRAW OBJECTS */
+/* OBJECTS */
 
 function drawBall(){
   ctx.beginPath();
