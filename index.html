@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Breakout</title>
+<title>Breakout Powerups</title>
 
 <style>
 body {
@@ -15,7 +15,6 @@ body {
   align-items: center;
 }
 
-/* GAME FRAME */
 #gameWrapper {
   width: 800px;
   max-width: 95vw;
@@ -25,12 +24,11 @@ canvas {
   width: 100%;
   height: auto;
   aspect-ratio: 800 / 500;
-  display: block;
   background: #222;
   border-radius: 10px;
+  display: block;
 }
 
-/* UI */
 #ui {
   color: white;
   text-align: center;
@@ -43,18 +41,15 @@ canvas {
   display: none;
 }
 
-/* FORCE CENTER UNDER GAME */
 #controls {
   width: 800px;
   max-width: 95vw;
   display: flex;
   justify-content: center;
-  align-items: center;
   gap: 30px;
   margin: 20px auto;
 }
 
-/* BIGGER BUTTONS FOR MOBILE */
 button {
   width: 90px;
   height: 90px;
@@ -65,7 +60,6 @@ button {
   color: white;
 }
 
-/* EVEN BIGGER ON SMALL SCREENS */
 @media (max-width: 600px) {
   button {
     width: 110px;
@@ -97,80 +91,150 @@ const ctx = canvas.getContext("2d");
 const ui = document.getElementById("ui");
 const restartBtn = document.getElementById("restartBtn");
 
-let ball, paddle, bricks, score, lives, gameOver;
+let balls, paddle, bricks, powerUps, score, lives, gameOver;
 let right = false, left = false;
 
 function init() {
   score = 0;
   lives = 3;
   gameOver = false;
-  setupLevel();
-  restartBtn.style.display = "none";
-  draw();
-}
 
-function setupLevel(){
-  ball = { x:400, y:250, dx:3, dy:-3, r:10 };
+  balls = [{ x:400, y:250, dx:3, dy:-3, r:10 }];
   paddle = { w:140, h:12, x:330 };
+  powerUps = [];
 
   bricks = [];
-bricks[c][r]={
-  status:1,
-  x:0,
-  y:0,
-  w:0,
-  h:0,
-  color: `hsl(${r * 60}, 70%, 50%)`
-};
+  for (let c=0;c<8;c++){
+    bricks[c]=[];
+    for (let r=0;r<5;r++){
+      bricks[c][r]={
+        status:1,
+        x:0,y:0,w:0,h:0,
+        color:`hsl(${r*60},70%,50%)`
+      };
+    }
+  }
 
   updateUI();
+  restartBtn.style.display = "none";
+  draw();
 }
 
 function updateUI(){
   ui.innerText = `Score: ${score} Lives: ${lives}`;
 }
 
-function drawBall(){
+function drawBall(b){
   ctx.beginPath();
-  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI*2);
+  ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
   ctx.fillStyle = "#00ffcc";
   ctx.fill();
 }
 
 function drawPaddle(){
   ctx.fillStyle = "#0095DD";
-  ctx.fillRect(paddle.x, canvas.height - 30, paddle.w, paddle.h);
+  ctx.fillRect(paddle.x, canvas.height-30, paddle.w, paddle.h);
 }
 
 function drawBricks(){
- ctx.fillStyle = b.color;
-bricks[c][r]={
-  status:1,
-  x:0,
-  y:0,
-  w:0,
-  h:0,
-  color: `hsl(${r * 60}, 70%, 50%)`
-};
+  let bw = canvas.width/8 - 10;
+  let bh = 20;
 
-function collision(){
   for (let c=0;c<8;c++){
     for (let r=0;r<5;r++){
       let b = bricks[c][r];
       if (b.status){
-        if (
-          ball.x > b.x &&
-          ball.x < b.x + b.w &&
-          ball.y > b.y &&
-          ball.y < b.y + b.h
-        ){
-          ball.dy *= -1;
-          b.status = 0;
-          score++;
-          updateUI();
+        let x = c*(bw+10)+5;
+        let y = r*(bh+10)+40;
+
+        b.x=x; b.y=y; b.w=bw; b.h=bh;
+
+        ctx.fillStyle = b.color;
+        ctx.fillRect(x,y,bw,bh);
+      }
+    }
+  }
+}
+
+function collision(){
+  balls.forEach(ball=>{
+    for (let c=0;c<8;c++){
+      for (let r=0;r<5;r++){
+        let b = bricks[c][r];
+        if (b.status){
+          if (
+            ball.x > b.x &&
+            ball.x < b.x+b.w &&
+            ball.y > b.y &&
+            ball.y < b.y+b.h
+          ){
+            ball.dy *= -1;
+            b.status = 0;
+            score++;
+
+            if (Math.random()<0.25){
+              powerUps.push({
+                x:b.x+b.w/2,
+                y:b.y,
+                dy:2,
+                type:["wide","slow","life","multi"][Math.floor(Math.random()*4)]
+              });
+            }
+
+            updateUI();
+          }
         }
       }
     }
+  });
+}
+
+function drawPowerUps(){
+  powerUps.forEach(p=>{
+    p.y += p.dy;
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(p.x-10,p.y-10,20,20);
+  });
+}
+
+function checkPowerUps(){
+  powerUps = powerUps.filter(p=>{
+    if (
+      p.y > canvas.height-40 &&
+      p.x > paddle.x &&
+      p.x < paddle.x+paddle.w
+    ){
+      applyPowerUp(p.type);
+      return false;
+    }
+    return true;
+  });
+}
+
+function applyPowerUp(type){
+  if (type==="wide"){
+    paddle.w += 40;
+    setTimeout(()=>paddle.w-=40,8000);
+  }
+
+  if (type==="slow"){
+    balls.forEach(b=>{
+      b.dx *= 0.7;
+      b.dy *= 0.7;
+    });
+  }
+
+  if (type==="life"){
+    lives++;
+    updateUI();
+  }
+
+  if (type==="multi"){
+    let newBalls=[];
+    balls.forEach(b=>{
+      newBalls.push({...b, dx:-b.dx});
+    });
+    balls = balls.concat(newBalls);
   }
 }
 
@@ -179,79 +243,71 @@ function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  drawBall();
+  balls.forEach(ball=>{
+    drawBall(ball);
+
+    if (ball.x<ball.r || ball.x>canvas.width-ball.r) ball.dx*=-1;
+    if (ball.y<ball.r) ball.dy*=-1;
+
+    if (ball.y>canvas.height-40){
+      if (ball.x>paddle.x && ball.x<paddle.x+paddle.w){
+        ball.dy*=-1;
+      } else {
+        loseLife();
+      }
+    }
+
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+  });
+
   drawPaddle();
   drawBricks();
+  drawPowerUps();
   collision();
-
-  if (ball.x < ball.r || ball.x > canvas.width-ball.r) ball.dx *= -1;
-  if (ball.y < ball.r) ball.dy *= -1;
-
-  if (ball.y > canvas.height - 40){
-    if (ball.x > paddle.x && ball.x < paddle.x + paddle.w){
-      ball.dy *= -1;
-    } else {
-      loseLife();
-    }
-  }
-
-  ball.x += ball.dx;
-  ball.y += ball.dy;
+  checkPowerUps();
 
   requestAnimationFrame(draw);
 }
 
 function loseLife(){
   lives--;
-  if (lives <= 0){
-    gameOver = true;
-    restartBtn.style.display = "block";
+  if (lives<=0){
+    gameOver=true;
+    restartBtn.style.display="block";
   } else {
-    ball.x = 400;
-    ball.y = 250;
+    balls=[{x:400,y:250,dx:3,dy:-3,r:10}];
   }
   updateUI();
 }
 
-/* BUTTON CONTROLS */
+/* CONTROLS */
 
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 
-leftBtn.addEventListener("touchstart", e => {
-  e.preventDefault();
-  left = true;
-});
-leftBtn.addEventListener("touchend", () => left = false);
-leftBtn.addEventListener("touchcancel", () => left = false);
+leftBtn.addEventListener("touchstart", e=>{e.preventDefault(); left=true;});
+leftBtn.addEventListener("touchend", ()=>left=false);
 
-rightBtn.addEventListener("touchstart", e => {
-  e.preventDefault();
-  right = true;
-});
-rightBtn.addEventListener("touchend", () => right = false);
-rightBtn.addEventListener("touchcancel", () => right = false);
+rightBtn.addEventListener("touchstart", e=>{e.preventDefault(); right=true;});
+rightBtn.addEventListener("touchend", ()=>right=false);
 
-/* KEYBOARD ALSO WORKS */
-
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowRight") right=true;
-  if(e.key==="ArrowLeft") left=true;
+document.addEventListener("keydown", e=>{
+  if (e.key==="ArrowRight"||e.key==="d"||e.key==="D") right=true;
+  if (e.key==="ArrowLeft"||e.key==="a"||e.key==="A") left=true;
 });
 
-document.addEventListener("keyup",e=>{
-  if(e.key==="ArrowRight") right=false;
-  if(e.key==="ArrowLeft") left=false;
+document.addEventListener("keyup", e=>{
+  if (e.key==="ArrowRight"||e.key==="d"||e.key==="D") right=false;
+  if (e.key==="ArrowLeft"||e.key==="a"||e.key==="A") left=false;
 });
-
-/* MOVEMENT */
 
 function movePaddle(){
   if (right) paddle.x += 6;
   if (left) paddle.x -= 6;
 
-  if (paddle.x < 0) paddle.x = 0;
-  if (paddle.x > canvas.width - paddle.w) paddle.x = canvas.width - paddle.w;
+  if (paddle.x<0) paddle.x=0;
+  if (paddle.x>canvas.width-paddle.w) paddle.x=canvas.width-paddle.w;
 
   requestAnimationFrame(movePaddle);
 }
