@@ -165,6 +165,20 @@ function drawBricks(){
 
         ctx.fillStyle = b.color;
         ctx.fillRect(x,y,bw,bh);
+
+  function drawScore() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  // .fillText(text, x, y)
+  ctx.fillText("Score: " + score, 8, 20); 
+}
+
+function drawLives() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  // Position this on the right side
+  ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
+}
       }
     }
   }
